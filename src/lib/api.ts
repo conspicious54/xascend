@@ -78,10 +78,12 @@ export const api = {
       body: JSON.stringify({ periodStart, periodEnd }),
     }),
 
-  /** Paste text from your timeline (no X API). Returns extracted software/books/ideas with mention_count. */
-  analyzePaste: (text: string) =>
-    request<{ items: Array<{ name: string; type: string; context?: string; sentiment?: string; mention_count?: number }> }>('/api/analyze-paste', {
+  /** Paste text from your timeline (no X API). On Netlify set VITE_PASTE_API_PATH=/.netlify/functions/analyze-paste */
+  analyzePaste: (text: string) => {
+    const url = import.meta.env.VITE_PASTE_API_PATH || `${API_BASE}/api/analyze-paste`;
+    return request<{ items: Array<{ name: string; type: string; context?: string; sentiment?: string; mention_count?: number }> }>(url, {
       method: 'POST',
       body: JSON.stringify({ text }),
-    }),
+    });
+  },
 };

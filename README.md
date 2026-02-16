@@ -85,6 +85,17 @@ Easiest: deploy to **Railway** or **Render** (both have free tiers). Your app is
 
 **Note:** On the free tier the app may sleep after inactivity; first load after sleep can be slow. SQLite data may not persist across deploys unless you use a persistent disk (Render paid feature).
 
+### Option C: Netlify (Paste timeline only)
+
+Netlify serves only the static site and **does not run the Node server**, so the full API (trending, scrape, creators) is not available. The **Paste timeline** tab can work by using a Netlify Function.
+
+1. Push your code to **GitHub** and connect the repo in [Netlify](https://netlify.com) → **Add new site** → **Import from Git**.
+2. Build settings are read from `netlify.toml` (build: `npm run build`, publish: `dist`, functions: `netlify/functions`).
+3. In Netlify: **Site settings** → **Environment variables** → add:
+   - `ANTHROPIC_API_KEY` = your Claude API key
+   - `VITE_PASTE_API_PATH` = `/.netlify/functions/analyze-paste` (so the frontend calls the function)
+4. Redeploy. Only the **Paste timeline** tab will work (Summarize); Trending and Manage Creators will 404 unless you run the full app on Railway/Render.
+
 ### After deploy
 
 - Open the URL. Use the **Paste timeline** tab: paste tweet text, click Summarize. You only need `ANTHROPIC_API_KEY` for that (no X API).
