@@ -26,7 +26,13 @@ export default function PasteFromTimeline() {
         setError('No items extracted. Try pasting more tweet text.');
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Request failed');
+      console.error('Paste analyze error:', e);
+      const msg = e instanceof Error ? e.message : 'Request failed';
+      setError(
+        msg.includes('404') || msg.includes('Failed')
+          ? 'API not available. Deploy with the Node server (Railway/Render): Build = "npm install && npm run build", Start = "node server/index.js".'
+          : msg
+      );
     } finally {
       setLoading(false);
     }
@@ -62,13 +68,13 @@ export default function PasteFromTimeline() {
     <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
       <h2 className="text-xl font-bold text-slate-900 mb-2">Paste from your timeline</h2>
       <p className="text-sm text-slate-600 mb-4">
-        Copy your whole timeline for a period (e.g. scroll, then copy). Paste below—one post per line or separate with blank lines. We find books, software, and ideas that were <strong>talked about multiple times</strong> in that period. No X API—you only pay for Claude.
+        Copy your whole timeline from X (scroll, then copy). Paste below. We detect each tweet by <strong>@username</strong> or <strong>new date</strong>—so multi-line tweets, dates, and “[Image]” are handled. We find books, software, and ideas that were <strong>talked about multiple times</strong> in that period. No X API—you only pay for Claude.
       </p>
 
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="Paste tweet text here... (e.g. one post per line or paragraph)"
+        placeholder="Paste your full timeline here (tweets split by @username or date)"
         className="w-full h-40 px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-y mb-4"
         disabled={loading}
       />

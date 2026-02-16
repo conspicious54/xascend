@@ -90,17 +90,41 @@ Return ONLY valid JSON in this format:
   return allExtractions;
 }
 
+/**
+ * Split pasted timeline into tweets. When you copy from X you get:
+ * - New tweet = line starting with @username, or a date line (e.g. "Feb 15"), or sometimes double newline.
+ */
+function splitPastedTimelineIntoPosts(rawText) {
+  let blocks = rawText
+    .split(/\n\s*(?=@[\w]{1,30}\b)/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+  if (blocks.length <= 1) {
+    blocks = rawText
+      .split(/\n\n+/)
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+  }
+  if (blocks.length <= 1 && rawText.includes('\n')) {
+    const dateOrAt = /\n\s*(?=(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2}|\d{1,2}\s*(?:\/|\.)\s*\d{1,2}|@[\w]+)/i;
+    blocks = rawText.split(dateOrAt).map((s) => s.trim()).filter((s) => s.length > 0);
+  }
+  return blocks.filter((b) => {
+    if (b.length < 3) return false;
+    const lower = b.toLowerCase();
+    if (lower === 'image' || lower === 'video') return false;
+    return true;
+  });
+}
+
 /** Analyze pasted text (e.g. from scrolling your X timeline). No X API—you pay only for Claude. */
 export async function analyzePaste(rawText) {
   if (!ANTHROPIC_API_KEY) {
     return { error: 'ANTHROPIC_API_KEY not set' };
   }
-  const blocks = rawText
-    .split(/\n\n+/)
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0);
+  const blocks = splitPastedTimelineIntoPosts(rawText);
   if (blocks.length === 0) {
-    return { error: 'No posts found. Paste some tweet text (e.g. one per line or paragraph).' };
+    return { error: 'No posts found. Paste your timeline—we detect tweets by @username or new dates.' };
   }
   const tweetTexts = blocks.map((t, idx) => `[${idx}] ${t}`).join('\n\n');
   const prompt = `You are discovering emerging software, books, and ideas from what people are actually saying—NOT matching against any predefined list or database.

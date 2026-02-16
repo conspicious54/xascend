@@ -19,12 +19,12 @@ export default function Dashboard() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [items, jobs] = await Promise.all([
+      const [itemsResult, jobsResult] = await Promise.allSettled([
         api.getTrendingItems(50),
         api.getScrapeJobs(5),
       ]);
-      setTrendingItems(items || []);
-      setRecentJobs(jobs || []);
+      setTrendingItems(itemsResult.status === 'fulfilled' ? itemsResult.value || [] : []);
+      setRecentJobs(jobsResult.status === 'fulfilled' ? jobsResult.value || [] : []);
     } catch (e) {
       console.error('Error loading data:', e);
     } finally {
